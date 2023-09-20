@@ -4,11 +4,13 @@
 
 <img src="./.github/aram-bg.jpg">
 
+### This app runs on [discloud](https://discloudbot.com) but you can run locally with the steps below
+
 ## GOAL
 
 This project was made with discord.py library and selenium to simply open a url, get data from the page, and then send it to discord channels in any server 
 
-### Set environment Variables
+### Set environment Variables (.env)
 
 the environment variables are:
 * TOKEN ( discord bot token )

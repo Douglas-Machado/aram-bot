@@ -1,36 +1,13 @@
 import discord
 from discord.ext import commands, tasks
-from selenium import webdriver
-from selenium.webdriver.common.by import By
 from datetime import datetime, time
 import os
+from dotenv import load_dotenv
+from aramdetails import AramDetails
+
+load_dotenv()
 
 DESCRIPTION = """A simple bot to send messages about aram(league of legends)"""
-
-DAILY_TOTAL_RESULTS = int(os.environ["DAILY_TOTAL_RESULTS"])
-
-
-class AramDetails:
-    def __init__(self):
-        self.keys = ["name", "winrate", "matches"]
-
-    def get_top_champions(self, total: int):
-        driver = webdriver.Chrome()
-        driver.get(os.environ["ARAM_WEB_URL"])
-        rows = driver.find_elements(By.CLASS_NAME, "rt-tr")
-        rows.pop(0)
-        rows = rows[:total]
-        items = []
-        for row in rows:
-            values = row.text.split("\n")
-            values.pop(4)
-            values.pop(2)
-            values.pop(0)
-            items.append(values)
-
-        driver.close()
-        response_dict: [dict] = [{k: v for (k, v) in zip(self.keys, infos)} for infos in items]
-        return response_dict
 
 intents = discord.Intents.default()
 intents.message_content = True
@@ -45,7 +22,7 @@ data = []
 async def on_ready():
     print(f"We have logged in as {aram_client.user} at {datetime.now().time()}")
     get_default_channel_ids()
-    set_data(data, aram_details.get_top_champions(total=int(os.environ["DAILY_TOTAL_RESULTS"])))
+    set_data(data, aram_details.get_top_champions(total=int(os.getenv("DAILY_TOTAL_RESULTS"))))
     send_daily_message.start()
 
 
@@ -80,8 +57,8 @@ def make_embed(titles: list[dict]):
         color=discord.Colour.green(),
     )
     embed_dict = {
-        "title": f"best {DAILY_TOTAL_RESULTS} champions of patch 13.18",
-        "description": f"daily stats of best {DAILY_TOTAL_RESULTS} ARAM champions",
+        "title": f"best {os.getenv('DAILY_TOTAL_RESULTS')} champions of patch 13.18",
+        "description": f"daily stats of best {os.getenv('DAILY_TOTAL_RESULTS')} ARAM champions",
         "color": 0xFEE75C,
         "author": {
             "name": "ARAMID",
@@ -113,5 +90,5 @@ async def on_message(message):
     else:
         await aram_client.process_commands(message)
 
-
-aram_client.run(os.environ["TOKEN"])
+if __name__ == "__main__":
+    aram_client.run(os.getenv("TOKEN"))
