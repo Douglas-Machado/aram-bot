@@ -31,17 +31,26 @@ class AramDetails:
     
     def get_default_browser(self):
         try:
-            return webdriver.Firefox()
+            driver = webdriver.Firefox()
+            driver.set_window_size(1100, 800)
+            return driver 
+            
         except NoSuchDriverException as ex:
             print('firefox')
             print(ex)
+
         try:
-            return webdriver.Chrome()
+            driver = webdriver.Chrome()
+            driver.set_window_size(1100, 800)
+            return driver 
         except NoSuchDriverException as ex:
             print('chrome')
             print(ex)
+
         try:
-            return webdriver.Ie()
+            driver = webdriver.Edge()
+            driver.set_window_size(1100, 800)
+            return driver
         except NoSuchDriverException as ex:
-            print('IE')
+            print('edge')
             print(ex)
