@@ -3,7 +3,7 @@ from discord.ext import commands, tasks
 from datetime import datetime, time
 import os
 from dotenv import load_dotenv
-from aramdetails import AramDetails
+from aram_data import AramData
 
 load_dotenv(override=True)
 
@@ -14,19 +14,18 @@ intents.message_content = True
 
 aram_client = commands.Bot(command_prefix="a!", intents=intents)
 channel_ids: list[int] = []
-aram_details = AramDetails()
-data = []
+
+aram_data = AramData()
+aram_data.fetch_mongo_data()
+data = aram_data.get_top_champions(int(os.getenv("DAILY_TOTAL_RESULTS")))
+commands_list = ["top5"]
 
 
 @aram_client.event
 async def on_ready():
     print(f"We have logged in as {aram_client.user} at {datetime.now().time()}")
     get_default_channel_ids()
-    set_data(
-        data,
-        aram_details.get_top_champions(total=int(os.getenv("DAILY_TOTAL_RESULTS"))),
-    )
-    format_embed.start()
+    send_message.start()
 
 
 def get_default_channel_ids():
@@ -34,27 +33,22 @@ def get_default_channel_ids():
         channel_ids.append(guild.text_channels[0].id)
 
 
-def set_data(target: list, value: list):
-    target.clear()
-    target.append(value)
-
-
 def format_data():
-    titles = [{"name": key} for key in aram_details.keys]
-    for title in titles:
+    fields = [{"name": key} for key in data[0].keys()]
+    for title in fields:
         title["value"] = ""
         title["inline"] = True
     count = 3
-    for d in data[0]:
-        titles.insert(count, {"name": "", "value": d.get("name"), "inline": True})
-        titles.insert(
+    for d in data:
+        fields.insert(count, {"name": "", "value": d.get("name"), "inline": True})
+        fields.insert(
             count + 1, {"name": "", "value": d.get("winrate"), "inline": True}
         )
-        titles.insert(
+        fields.insert(
             count + 2, {"name": "", "value": d.get("matches"), "inline": True}
         )
         count += 4
-    return titles
+    return fields
 
 
 def make_embed(titles: list[dict]):
@@ -75,24 +69,33 @@ def make_embed(titles: list[dict]):
     return embed.from_dict(embed_dict)
 
 
-@tasks.loop(time=time(13, 0, 0))
 # @tasks.loop(seconds=20)
-async def format_embed():
+@tasks.loop(time=time(12, 0, 0))
+async def send_message():
     formatted_data = format_data()
     embed = make_embed(formatted_data)
-    # channel = aram_client.get_channel(1153332095792463922)
-    # await channel.send(embed=embed)
-    # test channel
-    for id in channel_ids:
-        try:
-            await send_message(id, embed)
-        except Exception as ex:
-            print(ex)
+    try:
+        guilds = []
+        for id in channel_ids:
+            channel = aram_client.get_channel(id)
+            guilds.append(channel.guild.name)
+            await channel.send(embed=embed)
+            print(f"message sent to {channel.name}")
+    except Exception as ex:
+        print(ex)
 
 
-async def send_message(id, embed):
-    channel = aram_client.get_channel(id)
-    await channel.send(embed=embed)
+@aram_client.command()
+async def top5(ctx):
+    formatted_data = format_data()
+    embed = make_embed(formatted_data)
+    await ctx.send(embed=embed)
+
+
+@aram_client.command()
+async def commands(ctx):
+    for command in commands_list:
+        await ctx.send(f" a! + {command}")
 
 
 @aram_client.event
@@ -100,6 +103,8 @@ async def on_message(message):
     if message.author.bot:
         return
 
+    if message.content.startswith("a!champions"):
+        await message.channel.send("coming soon")
     else:
         await aram_client.process_commands(message)
 
