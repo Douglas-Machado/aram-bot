@@ -17,7 +17,6 @@ channel_ids: list[int] = []
 
 aram_data = AramData()
 aram_data.fetch_mongo_data()
-data = aram_data.get_top_champions(int(os.getenv("DAILY_TOTAL_RESULTS")))
 commands_list = ["top5"]
 
 
@@ -25,6 +24,7 @@ commands_list = ["top5"]
 async def on_ready():
     print(f"We have logged in as {aram_client.user} at {datetime.now().time()}")
     get_default_channel_ids()
+    aram_data.fetch_mongo_data()
     send_message.start()
 
 
@@ -34,6 +34,7 @@ def get_default_channel_ids():
 
 
 def format_data():
+    data = aram_data.get_top_champions(int(os.getenv("DAILY_TOTAL_RESULTS")))
     fields = [{"name": key} for key in data[0].keys()]
     for title in fields:
         title["value"] = ""
@@ -67,6 +68,11 @@ def make_embed(titles: list[dict]):
     }
 
     return embed.from_dict(embed_dict)
+
+
+@tasks.loop(hours=10)
+async def update_data():
+    aram_data.fetch_mongo_data()
 
 
 # @tasks.loop(seconds=20)
