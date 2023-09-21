@@ -17,7 +17,7 @@ channel_ids: list[int] = []
 
 aram_data = AramData()
 aram_data.fetch_mongo_data()
-commands_list = ["top5"]
+commands_list = ["top5", "champion <name>"]
 
 
 @aram_client.event
@@ -33,8 +33,7 @@ def get_default_channel_ids():
         channel_ids.append(guild.text_channels[0].id)
 
 
-def format_data():
-    data = aram_data.get_top_champions(int(os.getenv("DAILY_TOTAL_RESULTS")))
+def format_data(data):
     fields = [{"name": key} for key in data[0].keys()]
     for title in fields:
         title["value"] = ""
@@ -52,13 +51,17 @@ def format_data():
     return fields
 
 
-def make_embed(titles: list[dict]):
+def make_embed(
+    titles: list[dict],
+    title=f"best {os.getenv('DAILY_TOTAL_RESULTS')} champions of patch 13.18",
+    description=f"daily stats of best {os.getenv('DAILY_TOTAL_RESULTS')} ARAM champions",
+):
     embed = discord.Embed(
         color=discord.Colour.green(),
     )
     embed_dict = {
-        "title": f"best {os.getenv('DAILY_TOTAL_RESULTS')} champions of patch 13.18",
-        "description": f"daily stats of best {os.getenv('DAILY_TOTAL_RESULTS')} ARAM champions",
+        "title": title,
+        "description": description,
         "color": 0xFEE75C,
         "author": {
             "name": "ARAMID",
@@ -78,7 +81,8 @@ async def update_data():
 # @tasks.loop(seconds=20)
 @tasks.loop(time=time(12, 0, 0))
 async def send_message():
-    formatted_data = format_data()
+    data = aram_data.get_top_champions(int(os.getenv("DAILY_TOTAL_RESULTS")))
+    formatted_data = format_data(data)
     embed = make_embed(formatted_data)
     try:
         guilds = []
@@ -93,9 +97,38 @@ async def send_message():
 
 @aram_client.command()
 async def top5(ctx):
-    formatted_data = format_data()
+    aram_data.fetch_mongo_data()
+    data = aram_data.get_top_champions(int(os.getenv("DAILY_TOTAL_RESULTS")))
+    formatted_data = format_data(data)
     embed = make_embed(formatted_data)
     await ctx.send(embed=embed)
+
+
+@aram_client.command(name="champion")
+async def get_champion(ctx, arg: str):
+    if not arg.capitalize() in aram_data.champions_list:
+        ctx.send("Champion not found")
+        return
+
+    champion_data = {}
+    for champion in aram_data.data:
+        if champion.get("name") == arg.capitalize():
+            champion_data = champion
+            break
+
+    title = f"{champion_data.get('name')} - TOP {champion_data.get('rank')}"
+    description = f"{champion_data.get('name')} stats"
+    message = f"""
+**{title}**
+*{description}*
+**-----------------**
+Rank - {champion_data.get("rank")}
+Tier - {champion_data.get("tier")}
+Win Rate - {champion_data.get("winrate")}
+Pick Rate - {champion_data.get("pickrate")}
+Matches - {champion_data.get("matches")}
+    """
+    await ctx.send(message)
 
 
 @aram_client.command()
