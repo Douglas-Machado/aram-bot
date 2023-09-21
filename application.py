@@ -22,17 +22,22 @@ data = []
 async def on_ready():
     print(f"We have logged in as {aram_client.user} at {datetime.now().time()}")
     get_default_channel_ids()
-    set_data(data, aram_details.get_top_champions(total=int(os.getenv("DAILY_TOTAL_RESULTS"))))
-    send_daily_message.start()
+    set_data(
+        data,
+        aram_details.get_top_champions(total=int(os.getenv("DAILY_TOTAL_RESULTS"))),
+    )
+    format_embed.start()
 
 
 def get_default_channel_ids():
     for guild in aram_client.guilds:
         channel_ids.append(guild.text_channels[0].id)
 
+
 def set_data(target: list, value: list):
     target.clear()
     target.append(value)
+
 
 def format_data():
     titles = [{"name": key} for key in aram_details.keys]
@@ -70,17 +75,25 @@ def make_embed(titles: list[dict]):
     return embed.from_dict(embed_dict)
 
 
-@tasks.loop(time=time(11,0,0))
+@tasks.loop(time=time(13, 0, 0))
 # @tasks.loop(seconds=20)
-async def send_daily_message():
+async def format_embed():
     formatted_data = format_data()
-    response = make_embed(formatted_data)
+    embed = make_embed(formatted_data)
     # channel = aram_client.get_channel(1153332095792463922)
-    # await channel.send(embed=response)
+    # await channel.send(embed=embed)
     # test channel
     for id in channel_ids:
-        channel = aram_client.get_channel(id)
-        await channel.send(embed=response)
+        try:
+            await send_message(id, embed)
+        except Exception as ex:
+            print(ex)
+
+
+async def send_message(id, embed):
+    channel = aram_client.get_channel(id)
+    await channel.send(embed=embed)
+
 
 @aram_client.event
 async def on_message(message):
@@ -89,6 +102,7 @@ async def on_message(message):
 
     else:
         await aram_client.process_commands(message)
+
 
 if __name__ == "__main__":
     aram_client.run(os.getenv("TOKEN"))
