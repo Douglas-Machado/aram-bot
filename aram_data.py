@@ -28,4 +28,8 @@ class AramData:
 
     def get_top_champions(self, amount: int):
         champions = self.data[:amount]
+        for champion in champions:
+            champion.pop("rank")
+            champion.pop("tier")
+            champion.pop("pickrate")
         return champions
