@@ -27,9 +27,11 @@ class AramData:
         db.close()
 
     def get_top_champions(self, amount: int):
-        champions = self.data[:amount]
-        for champion in champions:
-            champion.pop("rank")
-            champion.pop("tier")
-            champion.pop("pickrate")
-        return champions
+        top_champions = []
+        for champion in self.data[:amount]:
+            tmp_champion = {}
+            tmp_champion["name"] = champion.get("name")
+            tmp_champion["winrate"] = champion.get("winrate")
+            tmp_champion["matches"] = champion.get("matches")
+            top_champions.append(tmp_champion)
+        return top_champions
