@@ -73,7 +73,7 @@ def make_embed(
     return embed.from_dict(embed_dict)
 
 
-@tasks.loop(hours=10)
+@tasks.loop(hours=3)
 async def update_data():
     aram_data.fetch_mongo_data()
 
@@ -105,19 +105,19 @@ async def top5(ctx):
 
 
 @aram_client.command(name="champion")
-async def get_champion(ctx, arg: str):
-    if not arg.capitalize() in aram_data.champions_list:
-        ctx.send("Champion not found")
+async def get_champion(ctx, *, message: str):
+    if not message.lower() in aram_data.champions_list:
+        await ctx.send("Champion not found")
         return
 
     champion_data = {}
     for champion in aram_data.data:
-        if champion.get("name") == arg.capitalize():
+        if champion.get("name").lower() == message.lower():
             champion_data = champion
             break
 
     title = f"{champion_data.get('name')} - TOP {champion_data.get('rank')}"
-    description = f"{champion_data.get('name')} stats"
+    description = f"{champion_data.get('name')} global stats"
     message = f"""
 **{title}**
 *{description}*

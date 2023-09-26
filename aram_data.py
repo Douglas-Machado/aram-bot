@@ -23,7 +23,7 @@ class AramData:
         ).sort("rank", 1)
         for result in results:
             self.data.append(result)
-            self.champions_list.append(result["name"])
+            self.champions_list.append(result["name"].lower())
         db.close()
 
     def get_top_champions(self, amount: int):
