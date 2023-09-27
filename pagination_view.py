@@ -110,3 +110,9 @@ class PaginationView(discord.ui.View):
         until_item = self.current_page * self.separator
         from_item = until_item - self.separator
         await self.update_message(self.data[from_item:until_item])
+
+    @discord.ui.button(emoji="✖️", style=discord.ButtonStyle.danger)
+    async def delete_message(
+        self, interaction: discord.Interaction, button: discord.ui.Button
+    ):
+        await interaction.message.delete()
