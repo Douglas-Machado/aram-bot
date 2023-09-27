@@ -4,6 +4,7 @@ from datetime import datetime, time
 import os
 from dotenv import load_dotenv
 from aram_data import AramData
+from pagination_view import PaginationView
 
 load_dotenv(override=True)
 
@@ -17,7 +18,7 @@ channel_ids: list[int] = []
 
 aram_data = AramData()
 aram_data.fetch_mongo_data()
-commands_list = ["top5", "champion <name>"]
+commands_list = ["top 5,10,15...", "champion <name>"]
 
 
 @aram_client.event
@@ -33,57 +34,21 @@ def get_default_channel_ids():
         channel_ids.append(guild.text_channels[0].id)
 
 
-def format_data(data):
-    fields = [{"name": key} for key in data[0].keys()]
-    for title in fields:
-        title["value"] = ""
-        title["inline"] = True
-    count = 3
-    for d in data:
-        fields.insert(count, {"name": "", "value": d.get("name"), "inline": True})
-        fields.insert(
-            count + 1, {"name": "", "value": d.get("winrate"), "inline": True}
-        )
-        fields.insert(
-            count + 2, {"name": "", "value": d.get("matches"), "inline": True}
-        )
-        count += 4
-    return fields
-
-
-def make_embed(
-    titles: list[dict],
-    title=f"best {os.getenv('DAILY_TOTAL_RESULTS')} champions of patch 13.18",
-    description=f"daily stats of best {os.getenv('DAILY_TOTAL_RESULTS')} ARAM champions",
-):
-    embed = discord.Embed(
-        color=discord.Colour.green(),
-    )
-    embed_dict = {
-        "title": title,
-        "description": description,
-        "color": 0xFEE75C,
-        "author": {
-            "name": "ARAMID",
-            "icon_url": "https://github.com/Douglas-Machado.png",
-        },
-        "fields": titles,
-    }
-
-    return embed.from_dict(embed_dict)
-
-
 @tasks.loop(hours=3)
 async def update_data():
     aram_data.fetch_mongo_data()
+
+
+# TODO compare champions
 
 
 # @tasks.loop(seconds=20)
 @tasks.loop(time=time(12, 0, 0))
 async def send_message():
     data = aram_data.get_top_champions(int(os.getenv("DAILY_TOTAL_RESULTS")))
-    formatted_data = format_data(data)
-    embed = make_embed(formatted_data)
+    pagination_view = PaginationView()
+    pagination_view.data = data
+    embed = pagination_view.create_embed(data)
     try:
         guilds = []
         for id in channel_ids:
@@ -96,12 +61,22 @@ async def send_message():
 
 
 @aram_client.command()
-async def top5(ctx):
-    aram_data.fetch_mongo_data()
-    data = aram_data.get_top_champions(int(os.getenv("DAILY_TOTAL_RESULTS")))
-    formatted_data = format_data(data)
-    embed = make_embed(formatted_data)
-    await ctx.send(embed=embed)
+async def top(ctx, msg):
+    try:
+        number = int(msg)
+        if number % 5 != 0:
+            raise
+    except ValueError:
+        await ctx.send("Must be a number")
+        return
+    except Exception:
+        await ctx.send("tip: a!top 5,10,15...")
+        return
+
+    data = aram_data.get_top_champions(number)
+    pagination_view = PaginationView()
+    pagination_view.data = data
+    await pagination_view.send(ctx)
 
 
 @aram_client.command(name="champion")
