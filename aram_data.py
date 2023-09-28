@@ -3,8 +3,8 @@ import pymongo
 
 
 class AramData:
-    data = []
-    champions_list = []
+    data: list = []
+    champions_list: list = []
 
     def fetch_mongo_data(self):
         db = pymongo.MongoClient(os.getenv("MONGO_URL"))
@@ -21,6 +21,7 @@ class AramData:
                 "matches": 1,
             },
         ).sort("rank", 1)
+        self.data.clear()
         for result in results:
             self.data.append(result)
             self.champions_list.append(result["name"].lower())
