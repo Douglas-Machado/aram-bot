@@ -4,6 +4,7 @@ import discord
 class PaginationView(discord.ui.View):
     current_page: int = 1
     separator: int = 5
+    user_id = None
 
     def set_total_pages(self):
         self.total_pages = int(len(self.data) / self.separator)
@@ -75,6 +76,9 @@ class PaginationView(discord.ui.View):
             self.last_page_button.disabled = False
             self.last_page_button.style = discord.ButtonStyle.green
             self.next_button.style = discord.ButtonStyle.primary
+    
+    def check_author(self, action_user_id):
+        return action_user_id == self.user_id
 
     @discord.ui.button(emoji="⏪", style=discord.ButtonStyle.primary)
     async def first_page_button(
@@ -122,4 +126,6 @@ class PaginationView(discord.ui.View):
     async def delete_message(
         self, interaction: discord.Interaction, button: discord.ui.Button
     ):
+        if not self.check_author(interaction.user.id):
+            return
         await interaction.message.delete()

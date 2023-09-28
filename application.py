@@ -70,6 +70,8 @@ async def top(ctx, msg):
     data = aram_data.get_top_champions(number)
     pagination_view = PaginationView()
     pagination_view.data = data
+    pagination_view.user_id = ctx.author.id
+    # await ctx.message.delete()
     await pagination_view.send(ctx)
 
 
