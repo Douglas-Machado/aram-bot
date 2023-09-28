@@ -17,7 +17,6 @@ aram_client = commands.Bot(command_prefix="a!", intents=intents)
 channel_ids: list[int] = []
 
 aram_data = AramData()
-aram_data.fetch_mongo_data()
 commands_list = ["top <number>", "champion <name>"]
 
 
