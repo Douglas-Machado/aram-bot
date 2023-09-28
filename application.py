@@ -18,7 +18,7 @@ channel_ids: list[int] = []
 
 aram_data = AramData()
 aram_data.fetch_mongo_data()
-commands_list = ["top 5,10,15...", "champion <name>"]
+commands_list = ["top <number>", "champion <name>"]
 
 
 @aram_client.event
@@ -64,13 +64,8 @@ async def send_message():
 async def top(ctx, msg):
     try:
         number = int(msg)
-        if number % 5 != 0:
-            raise
     except ValueError:
         await ctx.send("Must be a number")
-        return
-    except Exception:
-        await ctx.send("tip: a!top 5,10,15...")
         return
 
     data = aram_data.get_top_champions(number)

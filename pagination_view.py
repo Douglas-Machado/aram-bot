@@ -5,7 +5,13 @@ class PaginationView(discord.ui.View):
     current_page: int = 1
     separator: int = 5
 
+    def set_total_pages(self):
+        self.total_pages = int(len(self.data) / self.separator)
+        if len(self.data) % self.separator != 0:
+            self.total_pages = int(len(self.data) / self.separator) + 1
+
     async def send(self, ctx):
+        self.set_total_pages()
         self.message = await ctx.send(view=self)
         await self.update_message(self.data[: self.separator])
 
@@ -29,9 +35,10 @@ class PaginationView(discord.ui.View):
     def create_embed(self, data):
         embed = discord.Embed()
         titles = self.format_data(data)
+
         embed_dict = {
-            "title": f"best {len(self.data)} champions of patch 13.18",
-            "description": f"page {self.current_page} of {int(len(self.data) / self.separator)}",
+            "title": f"best {len(self.data)} champions of patch 13.19",
+            "description": f"page {self.current_page} of {self.total_pages}",
             "color": 0xFEE75C,
             "author": {
                 "name": "ARAMID",
@@ -58,7 +65,7 @@ class PaginationView(discord.ui.View):
             self.first_page_button.style = discord.ButtonStyle.green
             self.prev_button.style = discord.ButtonStyle.primary
 
-        if self.current_page == int(len(self.data) / self.separator):
+        if self.current_page == self.total_pages:
             self.next_button.disabled = True
             self.last_page_button.disabled = True
             self.last_page_button.style = discord.ButtonStyle.gray
@@ -106,7 +113,7 @@ class PaginationView(discord.ui.View):
         self, interaction: discord.Interaction, button: discord.ui.Button
     ):
         await interaction.response.defer()
-        self.current_page = int(len(self.data) / self.separator)
+        self.current_page = self.total_pages
         until_item = self.current_page * self.separator
         from_item = until_item - self.separator
         await self.update_message(self.data[from_item:until_item])
