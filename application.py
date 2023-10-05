@@ -25,6 +25,7 @@ async def on_ready():
     print(f"We have logged in as {aram_client.user} at {datetime.now().time()}")
     get_default_channel_ids()
     aram_data.fetch_mongo_data()
+    update_data.start()
     send_message.start()
 
 
@@ -36,6 +37,7 @@ def get_default_channel_ids():
 @tasks.loop(hours=3)
 async def update_data():
     aram_data.fetch_mongo_data()
+    print("update_data")
 
 
 # TODO compare champions
@@ -63,6 +65,8 @@ async def send_message():
 async def top(ctx, msg):
     try:
         number = int(msg)
+        if number == 0:
+            return
     except ValueError:
         await ctx.send("Must be a number")
         return
@@ -71,7 +75,6 @@ async def top(ctx, msg):
     pagination_view = PaginationView()
     pagination_view.data = data
     pagination_view.user_id = ctx.author.id
-    # await ctx.message.delete()
     await pagination_view.send(ctx)
 
 

@@ -2,9 +2,10 @@ import discord
 
 
 class PaginationView(discord.ui.View):
+    user_id = None
+    total_pages = 0
     current_page: int = 1
     separator: int = 5
-    user_id = None
 
     def set_total_pages(self):
         self.total_pages = int(len(self.data) / self.separator)
