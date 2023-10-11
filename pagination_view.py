@@ -39,7 +39,7 @@ class PaginationView(discord.ui.View):
         titles = self.format_data(data)
 
         embed_dict = {
-            "title": f"best {len(self.data)} champions of patch 13.19",
+            "title": f"best {len(self.data)} champions of patch 13.20",
             "description": f"page {self.current_page} of {self.total_pages}",
             "color": 0xFEE75C,
             "author": {
