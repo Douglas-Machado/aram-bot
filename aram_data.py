@@ -5,8 +5,10 @@ import pymongo
 class AramData:
     data: list = []
     champions_list: list = []
+    patch: str = ""
 
     def fetch_mongo_data(self):
+        self.get_patch_info()
         db = pymongo.MongoClient(os.getenv("MONGO_URL"))
         collection = db.aramid.champions_data
         results = collection.find(
@@ -36,3 +38,10 @@ class AramData:
             tmp_champion["matches"] = champion.get("matches")
             top_champions.append(tmp_champion)
         return top_champions
+
+    def get_patch_info(self):
+        db = pymongo.MongoClient(os.getenv("MONGO_URL"))
+        collection = db.aramid.patch_info
+        results = collection.find({}, {"_id": 0, "patch": 1})
+        for result in results:
+            self.patch = result["patch"]

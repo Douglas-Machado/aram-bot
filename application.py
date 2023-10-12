@@ -24,7 +24,6 @@ commands_list = ["top <number>", "champion <name>"]
 async def on_ready():
     print(f"We have logged in as {aram_client.user} at {datetime.now().time()}")
     get_default_channel_ids()
-    aram_data.fetch_mongo_data()
     update_data.start()
     send_message.start()
 

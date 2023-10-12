@@ -1,5 +1,5 @@
 import discord
-
+from aram_data import AramData
 
 class PaginationView(discord.ui.View):
     user_id = None
@@ -39,7 +39,7 @@ class PaginationView(discord.ui.View):
         titles = self.format_data(data)
 
         embed_dict = {
-            "title": f"best {len(self.data)} champions of patch 13.20",
+            "title": f"best {len(self.data)} champions of patch {self.get_patch()}",
             "description": f"page {self.current_page} of {self.total_pages}",
             "color": 0xFEE75C,
             "author": {
@@ -54,6 +54,11 @@ class PaginationView(discord.ui.View):
     async def update_message(self, data):
         self.update_buttons()
         await self.message.edit(embed=self.create_embed(data), view=self)
+    
+    def get_patch(self):
+        aram_data = AramData()
+        aram_data.get_patch_info()
+        return aram_data.patch
 
     def update_buttons(self):
         if self.current_page == 1:
