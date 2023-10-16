@@ -3,14 +3,14 @@ from aram_data import AramData
 
 class PaginationView(discord.ui.View):
     user_id = None
-    total_pages = 0
+    total_pages = 1
     current_page: int = 1
     separator: int = 5
 
     def set_total_pages(self):
         self.total_pages = int(len(self.data) / self.separator)
-        if len(self.data) % self.separator != 0:
-            self.total_pages = int(len(self.data) / self.separator) + 1
+        self.total_pages += 1 if len(self.data) % self.separator != 0 else 0
+            
 
     async def send(self, ctx):
         self.set_total_pages()
